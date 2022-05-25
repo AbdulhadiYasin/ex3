@@ -19,23 +19,40 @@ using namespace std;
 template<class T> class Queue {
 public:
     
-    struct EmptyQueue{
-        const std::string what () {
-            return "Empty Queue";
+    /*
+     * Type of function for filtering queues.
+     * This function should accept an element of a queue and
+     * reutrn true if it matches a certain condition & false if it doesn't
+     */
+    typedef bool (*Predicate)(const T&);
+    
+    /*
+     * Type of function for transforming queues.
+     * This function should accept an element of a queue and change it
+     */
+    typedef void (*Operation)(T&);
+    
+    class EmptyQueue : public std::logic_error {
+    public:
+        EmptyQueue(const string& what) : std::logic_error(what){
         }
     };
     
     /**
      * C'tor of Queue class
     */
-    Queue<T>(): m_size(0), m_head(NULL), m_tail(NULL) {
+    Queue<T>() {
         // Initialize an empty queue.
+        m_size = 0;
+        m_head = m_tail = NULL;
     }
     
     /**
      * D'tor of Queue class
     */
-    ~Queue<T>() = default;
+    ~Queue<T>() {
+        delete m_head;
+    }
     
     Queue& operator=(const Queue& other) {
         if (this == &other)
@@ -57,14 +74,17 @@ public:
         return *this;
     }
     
-    Queue(const Queue& other): m_size(other.m_size), m_head(NULL), m_tail(NULL) {
+    Queue(const Queue& other){
+        m_size = other.size();
+        m_head = NULL;
+        m_tail = NULL;
+        
         QueueNode<T>* oNode = other.m_head;
         while(oNode != NULL){
-            T& v = (*oNode).getValue();
+            T& v = oNode->getValue();
             pushBack(v);
-            m_size += 1;
             
-            oNode = (*oNode).getNext();
+            oNode = oNode->getNext();
         }
     }
     
@@ -74,17 +94,24 @@ public:
      */
     void pushBack(const T& item) {
         if(m_head == NULL){
-            QueueNode<T> newNode(item);
-            m_head = &newNode;
+            QueueNode<T> *newNodePtr = new QueueNode<T>(item);
+            
+            m_head = newNodePtr;
             m_tail = NULL;
             m_size = 1;
         } else if(m_tail == NULL){
             // There's a head, but theres no tail (single item).
-            m_tail = m_head->addNext(item);
+            QueueNode<T> *newNodePtr = new QueueNode<T>(item);
+            
+            (*m_head).setNext(newNodePtr);
+            m_tail = newNodePtr;
             m_size += 1;
         } else {
             // There's a tail.
-            m_tail = m_tail->addNext(item);
+            QueueNode<T> *newNodePtr = new QueueNode<T>(item);
+            (*m_tail).setNext(newNodePtr);
+            
+            m_tail = newNodePtr;
             m_size += 1;
         }
     }
@@ -95,7 +122,7 @@ public:
      */
     T& front() const {
         if(m_head == NULL)
-            throw EmptyQueue();
+            throw EmptyQueue("Can't return the first element of an empty queue");
         
         T& v = (*m_head).getValue();
         return v;
@@ -140,8 +167,8 @@ public:
     
 private:
     int m_size = 0;
-    QueueNode<T>* m_head = NULL;
-    QueueNode<T>* m_tail = NULL;
+    QueueNode<T>* m_head;
+    QueueNode<T>* m_tail;
 };
 
 template<class T>
@@ -176,7 +203,7 @@ public:
     
     Iterator& operator++() {
         if(m_current == NULL)
-            return *this;
+            throw InvalidOperation();
         
         m_current = (*m_current).getNext();
         return *this;
@@ -189,7 +216,8 @@ public:
     }
     
     bool operator==(const Iterator& iterator) const {
-        assert(m_queue == iterator.m_queue);
+        if(m_queue != iterator.m_queue)
+            throw InvalidOperation();
         return m_current == iterator.m_current;
     }
     
@@ -232,7 +260,7 @@ public:
     
     ConstIterator& operator++() {
         if(m_current == NULL)
-            return *this;
+            throw InvalidOperation();
         
         m_current = (*m_current).getNext();
         return *this;
@@ -245,7 +273,8 @@ public:
     }
     
     bool operator==(const ConstIterator& iterator) const {
-        assert(m_queue == iterator.m_queue);
+        if(m_queue != iterator.m_queue)
+            throw InvalidOperation();
         return m_current == iterator.m_current;
     }
     
@@ -274,7 +303,7 @@ template<class T> Queue<T> filter(Queue<T> queue, bool (*predicate)(T)){
     return newQueue;
 }
 
-template<class T> void transform(Queue<T> queue, void (*transformer)(T&)){
+template<class T> void transform(Queue<T>& queue, void (*transformer)(T&)){
     if(transformer == NULL)
         return;
     
