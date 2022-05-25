@@ -32,9 +32,9 @@ public:
      */
     typedef void (*Operation)(T&);
     
-    class EmptyQueue : public std::logic_error {
-    public:
-        EmptyQueue(const string& what) : std::logic_error(what){
+    struct EmptyQueue : public std::exception {
+        const char * what () const throw () {
+            return "Can't return the first element of an empty queue";
         }
     };
     
@@ -122,7 +122,7 @@ public:
      */
     T& front() const {
         if(m_head == NULL)
-            throw EmptyQueue("Can't return the first element of an empty queue");
+            throw EmptyQueue();
         
         T& v = (*m_head).getValue();
         return v;
