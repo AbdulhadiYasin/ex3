@@ -33,8 +33,8 @@ public:
         }
     };
 private:
-    int m_value = DEFAULT_MAX_HEALTH;
-    int m_maxValue = DEFAULT_MAX_HEALTH;
+    int m_value;
+    int m_maxValue;
 
 };
 

@@ -8,7 +8,7 @@
 #include "HealthPoints.h"
 #include <stdexcept>
 
-HealthPoints::HealthPoints(int maxHealth): m_maxValue(maxHealth), m_value(maxHealth) {
+HealthPoints::HealthPoints(int maxHealth): m_value(maxHealth), m_maxValue(maxHealth) {
     if(maxHealth <= 0)
         throw HealthPoints::InvalidArgument();
 }

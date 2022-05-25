@@ -78,7 +78,7 @@ private:
 
 
 
-template<class T> QueueNode<T>::QueueNode(T value): m_value(value) {
+template<class T> QueueNode<T>::QueueNode(T value): m_value(value), m_next(NULL) {
     m_next = NULL;
 }
 
