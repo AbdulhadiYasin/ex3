@@ -136,15 +136,18 @@ public:
             return; // There's no thing to do here.
         
         if(m_size == 1){ // There's only one item in queue, abut to becom empty.
+            delete m_head;
             m_head = NULL;
             m_tail = NULL;
             m_size = 0;
             return;
         }
         
-        /*QueueNode<T>* second = m_head->getNext();
-        m_head->setNext(NULL);*/
-        m_head = m_head->getNext();;
+        QueueNode<T>* second = m_head->getNext();
+        m_head->setNext(NULL);
+        delete m_head;
+        
+        m_head = second;
         
         m_size -= 1;
     }
