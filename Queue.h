@@ -50,6 +50,8 @@ public:
     */
     ~Queue<T>() {
         delete m_head;
+        m_head = NULL;
+        m_tail = NULL;
     }
     
     Queue& operator=(const Queue& other) {
@@ -64,7 +66,6 @@ public:
         Element<T>* oNode = other.m_head;
         while(oNode != NULL){
             pushBack(oNode->getValue());
-            
             oNode = oNode->getNext();
         }
         
@@ -108,6 +109,7 @@ public:
             Element<T> *newNodePtr = new Element<T>(item);
             (*m_tail).setNext(newNodePtr);
             
+            m_tail = NULL;
             m_tail = newNodePtr;
             m_size += 1;
         }
@@ -283,14 +285,6 @@ public:
          */
         ~ConstIterator() = default;
         
-        /*const T operator*() const {
-            if(m_current == NULL)
-                throw InvalidOperation();
-            
-            T& v = (*m_current).getValue();
-            return v;
-        }*/
-        
         const T& operator*() const {
             if(m_current == NULL)
                 throw InvalidOperation();
@@ -298,12 +292,6 @@ public:
             T& v = (*m_current).getValue();
             return v;
         }
-        
-        /*const T* operator->() const {
-            if(m_current == NULL)
-                throw InvalidOperation();
-            return &((*m_current).getValue());
-        }*/
         
         ConstIterator& operator++() {
             if(m_current == NULL)
@@ -352,6 +340,8 @@ private:
         ~Element() {
             if(m_next != NULL)
                 delete m_next;
+            
+            m_next = NULL;
         }
         
         /*
@@ -379,31 +369,6 @@ private:
         */
         void setValue(const El& newValue) {
             m_value = newValue;
-        }
-        
-        /**
-         * Adds a new node after the receiver with the provided newValue.
-         *
-         * @param value - The value to add as the next node of the receiver.
-         * @return A reference to the node after the receiver after the update.
-        */
-        Element* addNext(const El& value) {
-            if(m_next == NULL){
-                Element<El> *newNodePtr;
-                Element<El> newNode(value);
-                newNodePtr = &newNode;
-                
-                m_next = newNodePtr;
-                return m_next;
-            }
-            
-            Element<El> *newNodePtr;
-            Element<El> newNode(value);
-            newNode.m_next = m_next;
-            newNodePtr = &newNode;
-            
-            m_next = newNodePtr;
-            return m_next;
         }
         
         /**
