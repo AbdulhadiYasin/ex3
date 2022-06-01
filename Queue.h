@@ -49,7 +49,8 @@ public:
      * D'tor of Queue class
     */
     ~Queue<T>() {
-        delete m_head;
+        if(m_head != NULL)
+            delete m_head;
         m_head = NULL;
         m_tail = NULL;
     }
