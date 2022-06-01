@@ -8,121 +8,8 @@
 #ifndef Queue_hpp
 #define Queue_hpp
 
-#include <stdio.h>
 #include <iostream>
-using namespace std;
-
-template <class T> class QueueNode {
-public:
-    /**
-     * C'tor of QueueNode class
-     *
-     * @param value - The value of the node.
-    */
-    QueueNode(T value);
-    
-    /**
-     * D'tor of Queue class
-    */
-    ~QueueNode();
-    
-    /*
-     * Assignment operator of QueueNode class.
-     *
-     * @param other - reference to an QueueNode object.
-     * @return
-     *      reference to an QueueNode object.
-     */
-    QueueNode& operator=(const QueueNode& other) = default;
-    
-    /**
-     * Returns node's value.
-     *
-     * @return Value of the receiver.
-    */
-    T& getValue();
-    
-    /**
-     * Sets the receiver (Node) to a new value.
-     *
-     * @param newValue - The new value to set.
-    */
-    void setValue(const T& newValue);
-    
-    /**
-     * Adds a new node after the receiver with the provided newValue.
-     *
-     * @param value - The value to add as the next node of the receiver.
-     * @return A reference to the node after the receiver after the update.
-    */
-    QueueNode* addNext(const T& value);
-    
-    /**
-     * Returns reference to the node after the receiver.
-     *
-     * @return A reference to the node after the receiver, if there's no such node returns NULL.
-    */
-    QueueNode* getNext() const;
-    
-    /**
-     * Sets the node after the receiver (Node) to be a new node.
-     * @note You are responsible of deleting the previous `next` when needed.
-     *
-     * @param newNext - The other node to set as next of the receiver.
-    */
-    void setNext(QueueNode* newNext);
-    
-    
-private:
-    T m_value;
-    QueueNode<T>* m_next;
-};
-
-
-
-template<class T> QueueNode<T>::QueueNode(T value): m_value(value), m_next(NULL) {
-    m_next = NULL;
-}
-
-template<class T> QueueNode<T>::~QueueNode() {
-    delete m_next;
-}
-    
-template<class T> T& QueueNode<T>::getValue() {
-    return m_value;
-}
-
-template<class T> void QueueNode<T>::setValue(const T& newValue) {
-    m_value = newValue;
-}
-
-template<class T> QueueNode<T>* QueueNode<T>::getNext() const {
-    return m_next;
-}
-
-template<class T> QueueNode<T>* QueueNode<T>::addNext(const T& value) {
-    if(m_next == NULL){
-        QueueNode<T> *newNodePtr;
-        QueueNode<T> newNode(value);
-        newNodePtr = &newNode;
-        
-        m_next = newNodePtr;
-        return m_next;
-    }
-    
-    QueueNode<T> *newNodePtr;
-    QueueNode<T> newNode(value);
-    newNode.m_next = m_next;
-    newNodePtr = &newNode;
-    
-    m_next = newNodePtr;
-    return m_next;
-}
-
-template<class T> void QueueNode<T>::setNext(QueueNode<T>* newNext) {
-    m_next = newNext;
-}
-
+using std::string;
 
 // One function works for all data types.
 // This would work even for user defined types
@@ -174,12 +61,11 @@ public:
         m_tail = NULL;
         m_size = 0;
         
-        QueueNode<T> oNode = other.m_head;
+        Element<T>* oNode = other.m_head;
         while(oNode != NULL){
-            pushBack(oNode.getValue());
-            m_size += 1;
+            pushBack(oNode->getValue());
             
-            oNode = oNode.getNext();
+            oNode = oNode->getNext();
         }
         
         return *this;
@@ -190,7 +76,7 @@ public:
         m_head = NULL;
         m_tail = NULL;
         
-        QueueNode<T>* oNode = other.m_head;
+        Element<T>* oNode = other.m_head;
         while(oNode != NULL){
             T& v = oNode->getValue();
             pushBack(v);
@@ -205,21 +91,21 @@ public:
      */
     void pushBack(const T& item) {
         if(m_head == NULL){
-            QueueNode<T> *newNodePtr = new QueueNode<T>(item);
+            Element<T> *newNodePtr = new Element<T>(item);
             
             m_head = newNodePtr;
             m_tail = NULL;
             m_size = 1;
         } else if(m_tail == NULL){
             // There's a head, but theres no tail (single item).
-            QueueNode<T> *newNodePtr = new QueueNode<T>(item);
+            Element<T> *newNodePtr = new Element<T>(item);
             
             (*m_head).setNext(newNodePtr);
             m_tail = newNodePtr;
             m_size += 1;
         } else {
             // There's a tail.
-            QueueNode<T> *newNodePtr = new QueueNode<T>(item);
+            Element<T> *newNodePtr = new Element<T>(item);
             (*m_tail).setNext(newNodePtr);
             
             m_tail = newNodePtr;
@@ -243,10 +129,12 @@ public:
      * Removes the first item from the queue. If the queue is empty (aka size = 0), does nothing.
      */
     void popFront() {
-        if(m_head == NULL || m_size == 0)
+        if(m_head == NULL || m_size == 0){
+            throw EmptyQueue();
             return; // There's no thing to do here.
+        }
         
-        if(m_size == 1){ // There's only one item in queue, abut to becom empty.
+        if(m_size == 1){ // There's only one item in queue, about to become empty.
             delete m_head;
             m_head = NULL;
             m_tail = NULL;
@@ -254,7 +142,7 @@ public:
             return;
         }
         
-        QueueNode<T>* second = m_head->getNext();
+        Element<T>* second = m_head->getNext();
         m_head->setNext(NULL);
         delete m_head;
         
@@ -281,127 +169,271 @@ public:
     
 private:
     int m_size = 0;
-    QueueNode<T>* m_head;
-    QueueNode<T>* m_tail;
-};
-
-template<class T>
-class Queue<T>::Iterator {
-    const Queue<T>* m_queue;
-    QueueNode<T>* m_current = NULL;
-    Iterator(const Queue<T>* queue, QueueNode<T>* node): m_queue(queue), m_current(node) {
-        // Initialize an iterator instance.
-    }
+    template<class El> class Element;
+    Element<T>* m_head;
+    Element<T>* m_tail;
     
-    friend class Queue<T>;
 public:
-    struct InvalidOperation{
-        const std::string what () {
-            return "Invalid Operation";
+    class Iterator {
+    private:
+        Queue<T>* m_queue;
+        Element<T>* m_current = NULL;
+    public:
+        struct InvalidOperation{
+            const std::string what () {
+                return "Invalid Operation";
+            }
+        };
+        
+        Iterator(Queue<T>* queue, Element<T>* node): m_queue(queue), m_current(node) {
+            // Initialize an iterator instance.
+        }
+        
+        Iterator(const Iterator& other): m_queue(other.m_queue), m_current(other.m_current) {
+        }
+        
+        Iterator& operator=(const Iterator& other) {
+            if(this == other)
+                return *this;
+            
+            this->m_queue = other.m_queue;
+            this->m_current = other.m_current;
+            return *this;
+        }
+        
+        /*
+         * D'tor of Iterator.
+         */
+        ~Iterator() = default;
+        
+        T& operator*() const {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            
+            T& v = (*m_current).getValue();
+            return v;
+        }
+        
+        T* operator->() const {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            return &((*m_current).getValue());
+        }
+        
+        Iterator& operator++() {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            m_current = (*m_current).getNext();
+            return *this;
+        }
+        
+        Iterator operator++(int) {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            Iterator result = *this;
+            ++*this;
+            return result;
+        }
+        
+        bool operator==(const Iterator& iterator) const {
+            if(m_queue != iterator.m_queue)
+                throw InvalidOperation();
+            
+            return m_current == iterator.m_current;
+        }
+        
+        bool operator!=(const Iterator& iterator) const {
+            return !(*this == iterator);
+        }
+    };
+public:
+    class ConstIterator {
+    private:
+        const Queue<T>* m_queue;
+        Element<T>* m_current = NULL;
+    public:
+        struct InvalidOperation{
+            const std::string what () {
+                return "Invalid Operation";
+            }
+        };
+        
+        ConstIterator(const Queue<T>* queue, Element<T>* node): m_queue(queue), m_current(node) {
+        }
+        
+        ConstIterator(const ConstIterator& other) : m_current(other.m_current) {
+            const Queue<T>* constQueue = other.m_queue;
+            m_queue = constQueue;
+        }
+        
+        ConstIterator& operator=(const ConstIterator& other) {
+            if(this == other)
+                return *this;
+            
+            this->m_current = other.m_current;
+            this->m_queue = other.m_queue;
+            return *this;
+        }
+        
+        /*
+         * D'tor of Iterator Class
+         */
+        ~ConstIterator() = default;
+        
+        /*const T operator*() const {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            T& v = (*m_current).getValue();
+            return v;
+        }*/
+        
+        const T& operator*() const {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            T& v = (*m_current).getValue();
+            return v;
+        }
+        
+        /*const T* operator->() const {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            return &((*m_current).getValue());
+        }*/
+        
+        ConstIterator& operator++() {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            m_current = (*m_current).getNext();
+            return *this;
+        }
+        
+        ConstIterator operator++(int) {
+            if(m_current == NULL)
+                throw InvalidOperation();
+            
+            ConstIterator result = *this;
+            ++ *this;
+            return result;
+        }
+        
+        bool operator==(const ConstIterator& iterator) const {
+            if(m_queue != iterator.m_queue)
+                throw InvalidOperation();
+            
+            return m_current == iterator.m_current;
+        }
+        
+        bool operator!=(const ConstIterator& iterator) const {
+            return !(*this == iterator);
         }
     };
     
-    T& operator*() const {
-        if(m_current == NULL)
-            throw InvalidOperation();
-        
-        
-        T& v = (*m_current).getValue();
-        return v;
-    }
-    T* operator->() const {
-        if(m_current == NULL)
-            throw InvalidOperation();
-        return &((*m_current).getValue());
-    }
-    
-    Iterator& operator++() {
-        if(m_current == NULL)
-            throw InvalidOperation();
-        
-        m_current = (*m_current).getNext();
-        return *this;
-    }
-    
-    Iterator operator++(int) {
-        Iterator result = *this;
-        ++*this;
-        return result;
-    }
-    
-    bool operator==(const Iterator& iterator) const {
-        if(m_queue != iterator.m_queue)
-            throw InvalidOperation();
-        return m_current == iterator.m_current;
-    }
-    
-    bool operator!=(const Iterator& iterator) const {
-        return !(*this == iterator);
-    }
-    
-    Iterator(const Iterator&) = default;
-    Iterator& operator=(const Iterator&) = default;
-};
-
-template<class T>
-class Queue<T>::ConstIterator {
-    const Queue<T>* m_queue;
-    QueueNode<T>* m_current = NULL;
-    ConstIterator(const Queue<T>* queue, QueueNode<T>* node): m_queue(queue), m_current(node) {
-        // Initialize an iterator instance.
-    }
-    
-    friend class Queue<T>;
-public:
-    struct InvalidOperation{
-        const std::string what () {
-            return "Invalid Operation";
+private:
+    template <class El> class Element {
+    public:
+        /**
+         * C'tor of QueueNode class
+         *
+         * @param value - The value of the node.
+        */
+        Element(El value): m_value(value), m_next(NULL){
+            m_next = NULL;
         }
+        
+        /**
+         * D'tor of Queue class
+        */
+        ~Element() {
+            if(m_next != NULL)
+                delete m_next;
+        }
+        
+        /*
+         * Assignment operator of QueueNode class.
+         *
+         * @param other - reference to an QueueNode object.
+         * @return
+         *      reference to an QueueNode object.
+         */
+        Element& operator=(const Element& other) = default;
+        
+        /**
+         * Returns node's value.
+         *
+         * @return Value of the receiver.
+        */
+        El& getValue() {
+            return m_value;
+        }
+        
+        /**
+         * Sets the receiver (Node) to a new value.
+         *
+         * @param newValue - The new value to set.
+        */
+        void setValue(const El& newValue) {
+            m_value = newValue;
+        }
+        
+        /**
+         * Adds a new node after the receiver with the provided newValue.
+         *
+         * @param value - The value to add as the next node of the receiver.
+         * @return A reference to the node after the receiver after the update.
+        */
+        Element* addNext(const El& value) {
+            if(m_next == NULL){
+                Element<El> *newNodePtr;
+                Element<El> newNode(value);
+                newNodePtr = &newNode;
+                
+                m_next = newNodePtr;
+                return m_next;
+            }
+            
+            Element<El> *newNodePtr;
+            Element<El> newNode(value);
+            newNode.m_next = m_next;
+            newNodePtr = &newNode;
+            
+            m_next = newNodePtr;
+            return m_next;
+        }
+        
+        /**
+         * Returns reference to the node after the receiver.
+         *
+         * @return A reference to the node after the receiver, if there's no such node returns NULL.
+        */
+        Element* getNext() const {
+            return m_next;
+        }
+        
+        /**
+         * Sets the node after the receiver (Node) to be a new node.
+         * @note You are responsible of deleting the previous `next` when needed.
+         *
+         * @param newNext - The other node to set as next of the receiver.
+        */
+        void setNext(Element* newNext) {
+            m_next = newNext;
+        }
+        
+    private:
+        El m_value;
+        Element<El>* m_next;
     };
-    
-    const T operator*() const {
-        if(m_current == NULL)
-            throw InvalidOperation();
-        
-        T& v = (*m_current).getValue();
-        return v;
-    }
-    const T* operator->() const {
-        if(m_current == NULL)
-            throw InvalidOperation();
-        return &((*m_current).getValue());
-    }
-    
-    ConstIterator& operator++() {
-        if(m_current == NULL)
-            throw InvalidOperation();
-        
-        m_current = (*m_current).getNext();
-        return *this;
-    }
-    
-    ConstIterator operator++(int) {
-        Iterator result = *this;
-        ++*this;
-        return result;
-    }
-    
-    bool operator==(const ConstIterator& iterator) const {
-        if(m_queue != iterator.m_queue)
-            throw InvalidOperation();
-        return m_current == iterator.m_current;
-    }
-    
-    bool operator!=(const ConstIterator& iterator) const {
-        return !(*this == iterator);
-    }
-    
-    ConstIterator(const ConstIterator&) = default;
-    ConstIterator& operator=(const ConstIterator&) = default;
 };
 
 
-template<class T> Queue<T> filter(Queue<T> queue, bool (*predicate)(T)){
+template<class T, class Predicate>
+Queue<T> filter(Queue<T> queue, Predicate predicate){
     if(predicate == NULL)
         return Queue<T>(queue);
     
@@ -417,14 +449,11 @@ template<class T> Queue<T> filter(Queue<T> queue, bool (*predicate)(T)){
     return newQueue;
 }
 
-template<class T> void transform(Queue<T>& queue, void (*transformer)(T&)){
-    if(transformer == NULL)
-        return;
-    
+template<class T, class Operation>
+void transform(Queue<T>& queue, Operation operation){
     for(typename Queue<T>::Iterator i = queue.begin(); i != queue.end(); ++i) {
         /* Handle filtering */
-        T& value = *i;
-        transformer(value);
+        operation(*i);
     }
 }
 

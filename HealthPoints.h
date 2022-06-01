@@ -17,14 +17,22 @@ using namespace std;
 
 class HealthPoints {
 public:
-    HealthPoints(int maxHealth = DEFAULT_MAX_HEALTH);
+    
+    HealthPoints(const int maxHealth = DEFAULT_MAX_HEALTH);
+    
+    ~HealthPoints() = default;
+    HealthPoints(const HealthPoints& other) = default;
+    HealthPoints& operator=(const HealthPoints& other) = default;
+    
+    
+    
+    HealthPoints operator+(const int rhs) const;
+    HealthPoints operator-(const int rhs) const;
+    
     HealthPoints& operator+=(const int rhs);
-    bool operator==(const HealthPoints& rhs);
-    bool operator!=(const HealthPoints& rhs);
-    bool operator<(const HealthPoints& rhs);
-    bool operator<=(const HealthPoints& rhs);
-    bool operator>(const HealthPoints& rhs);
-    bool operator>=(const HealthPoints& rhs);
+    HealthPoints& operator-=(const int rhs);
+    
+    friend bool operator<(const HealthPoints& current, const HealthPoints& other);
     friend std::ostream& operator<<(std::ostream& stream, const HealthPoints& hp);
     
     struct InvalidArgument{
@@ -38,9 +46,12 @@ private:
 
 };
 
-HealthPoints operator+(HealthPoints& lhs, const int rhs);
-HealthPoints operator+(const int lhs, HealthPoints& rhs);
-HealthPoints operator-(HealthPoints& lhs, const int rhs);
-HealthPoints& operator-=(HealthPoints& lhs, const int rhs);
+
+bool operator>=(const HealthPoints& lhs, const HealthPoints& rhs);
+bool operator<=(const HealthPoints& lhs, const HealthPoints& rhs);
+bool operator>(const HealthPoints& lhs, const HealthPoints& rhs);
+bool operator!=(const HealthPoints& lhs, const HealthPoints& rhs);
+HealthPoints operator+(const int lhs, const HealthPoints& rhs);
+bool operator==(const HealthPoints& lhs, const HealthPoints& rhs);
 
 #endif /* HealthPoints_hpp */
