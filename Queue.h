@@ -73,7 +73,7 @@ public:
     }
     
     Queue(const Queue& other){
-        m_size = other.size();
+        m_size = 0;
         m_head = NULL;
         m_tail = NULL;
         
