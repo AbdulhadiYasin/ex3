@@ -83,9 +83,12 @@ public:
             try {
                 pushBack(v);
             } catch (const std::bad_alloc& e){
+                if(this->m_head != NULL){
+                    delete this->m_head;
+                    this->m_size = 0;
+                }
                 throw e;
             }
-            
             
             oNode = oNode->getNext();
         }
