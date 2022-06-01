@@ -80,7 +80,12 @@ public:
         Element<T>* oNode = other.m_head;
         while(oNode != NULL){
             T& v = oNode->getValue();
-            pushBack(v);
+            try {
+                pushBack(v);
+            } catch (const std::bad_alloc& e){
+                throw e;
+            }
+            
             
             oNode = oNode->getNext();
         }
